@@ -1,0 +1,6 @@
+@backendTinTuc_HostAddress = http://localhost:5222
+
+GET {{backendTinTuc_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
