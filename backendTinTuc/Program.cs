@@ -11,8 +11,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
                       policy =>
                       {
-                          policy.WithOrigins("http://example.com",
-                                              "http://www.contoso.com");
+                          policy.WithOrigins("localhost:3000",
+                                              "localhost:3001");
                       });
 });
 builder.Services.AddMvc();
