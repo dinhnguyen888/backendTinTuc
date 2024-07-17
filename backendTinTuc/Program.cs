@@ -12,7 +12,7 @@ builder.Services.AddCors(options =>
                       policy =>
                       {
                           policy.WithOrigins("localhost:3000",
-                                              "hfsdjfhds");
+                                              "hghghghh");
                       });
 });
 builder.Services.AddMvc();
