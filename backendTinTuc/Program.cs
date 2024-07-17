@@ -13,7 +13,7 @@ builder.Services.AddCors(options =>
                       {
                           policy.WithOrigins("localhost:3000",
 
-                                              "khanh");
+                                              "localhost:3001");
 
                                          
 
