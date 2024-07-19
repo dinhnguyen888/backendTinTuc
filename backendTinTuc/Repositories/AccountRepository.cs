@@ -7,7 +7,7 @@ public class AccountRepository
 
     public AccountRepository(IMongoDatabase database)
     {
-        _collection = database.GetCollection<Account>("YourModelCollection");
+        _collection = database.GetCollection<Account>("Account");
     }
 
     public async Task<List<Account>> GetAllAsync()

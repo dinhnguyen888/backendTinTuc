@@ -1,30 +1,33 @@
-using backendTinTuc.Models;
+﻿using backendTinTuc.Models;
 using Microsoft.Extensions.Options;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure MongoDB settings
 builder.Services.Configure<MongoDBSettings>(
     builder.Configuration.GetSection(nameof(MongoDBSettings)));
 
+// Register MongoDB client as a singleton service
 builder.Services.AddSingleton<IMongoClient, MongoClient>(sp =>
 {
     var settings = sp.GetRequiredService<IOptions<MongoDBSettings>>().Value;
     return new MongoClient(settings.ConnectionString);
 });
 
-
-
+// Register MongoDB database as a singleton service
 builder.Services.AddSingleton(sp =>
 {
     var settings = sp.GetRequiredService<IOptions<MongoDBSettings>>().Value;
     var client = sp.GetRequiredService<IMongoClient>();
     return client.GetDatabase(settings.DatabaseName);
 });
-var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
-// Add services to the container.
 
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
+// Add services to the container
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddCors(options =>
@@ -32,15 +35,32 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
                       policy =>
                       {
-                          policy.WithOrigins("localhost:3000",
-                                              "localhost:3001");
+                          policy.WithOrigins("http://localhost:3000",
+                                             "http://localhost:3001")
+                                .AllowAnyMethod()
+                                .AllowAnyHeader();
                       });
 });
 builder.Services.AddMvc();
 
 var app = builder.Build();
-
-// Configure the HTTP request pipeline.
+// Check MongoDB connection
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var database = services.GetRequiredService<IMongoDatabase>();
+       
+        database.RunCommandAsync((Command<BsonDocument>)"{ping:1}").Wait();
+        Console.WriteLine("MongoDB connection is healthy");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"MongoDB connection failed: {ex.Message}");
+    }
+}
+// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -50,7 +70,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseCors(MyAllowSpecificOrigins);
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
