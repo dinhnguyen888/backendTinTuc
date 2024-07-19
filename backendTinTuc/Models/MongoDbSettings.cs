@@ -1,8 +1,6 @@
-﻿namespace backendTinTuc.Models
-{
-    public class MongoDBSettings
+﻿public class MongoDbSettings
     {
         public string ConnectionString { get; set; } = null!;
         public string DatabaseName { get; set; } = null!;
     }
-}
+

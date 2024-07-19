@@ -6,20 +6,20 @@ using MongoDB.Driver;
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure MongoDB settings
-builder.Services.Configure<MongoDBSettings>(
-    builder.Configuration.GetSection(nameof(MongoDBSettings)));
+builder.Services.Configure<MongoDbSettings>(
+    builder.Configuration.GetSection(nameof(MongoDbSettings)));
 
 // Register MongoDB client as a singleton service
 builder.Services.AddSingleton<IMongoClient, MongoClient>(sp =>
 {
-    var settings = sp.GetRequiredService<IOptions<MongoDBSettings>>().Value;
+    var settings = sp.GetRequiredService<IOptions<MongoDbSettings>>().Value;
     return new MongoClient(settings.ConnectionString);
 });
 
 // Register MongoDB database as a singleton service
 builder.Services.AddSingleton(sp =>
 {
-    var settings = sp.GetRequiredService<IOptions<MongoDBSettings>>().Value;
+    var settings = sp.GetRequiredService<IOptions<MongoDbSettings>>().Value;
     var client = sp.GetRequiredService<IMongoClient>();
     return client.GetDatabase(settings.DatabaseName);
 });
@@ -44,7 +44,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddMvc();
 
 var app = builder.Build();
-// Check MongoDB connection
+// Check MongoDB connection 
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
