@@ -24,6 +24,9 @@ builder.Services.AddSingleton(sp =>
     return client.GetDatabase(settings.DatabaseName);
 });
 
+//Add AccountRepository as a service
+builder.Services.AddSingleton<AccountRepository>();
+
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 // Add services to the container
