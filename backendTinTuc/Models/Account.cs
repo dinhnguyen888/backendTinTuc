@@ -24,5 +24,4 @@ public class Account
 
     [BsonElement("Token")]
     public DateTime Token { get; set; }
-
 }

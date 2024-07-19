@@ -1,5 +1,7 @@
-﻿// Repositories/YourModelRepository.cs
-using MongoDB.Driver;
+﻿using MongoDB.Driver;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using backendTinTuc.Models;
 
 public class AccountRepository
 {
@@ -18,6 +20,11 @@ public class AccountRepository
     public async Task<Account> GetByIdAsync(string id)
     {
         return await _collection.Find(x => x.Id == id).FirstOrDefaultAsync();
+    }
+
+    public async Task<Account> GetByEmailAsync(string email)
+    {
+        return await _collection.Find(x => x.Email == email).FirstOrDefaultAsync();
     }
 
     public async Task CreateAsync(Account model)

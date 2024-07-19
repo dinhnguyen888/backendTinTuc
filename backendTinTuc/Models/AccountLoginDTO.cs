@@ -2,7 +2,7 @@
 
 namespace backendTinTuc.Models
 {
-    public class AccountDTO
+    public class AccountLoginDTO
     {
         [BsonElement("Email")]
         public string Email { get; set; }

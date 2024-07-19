@@ -1,6 +1,12 @@
 ﻿using backendTinTuc.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
+using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace backendTinTuc.Controllers
@@ -10,16 +16,18 @@ namespace backendTinTuc.Controllers
     public class LoginController : ControllerBase
     {
         private readonly MongoDbContext _context;
+        private readonly IConfiguration _configuration;
 
-        public LoginController(MongoDbContext context)
+        public LoginController(MongoDbContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] AccountDTO accountDto)
+        public async Task<IActionResult> Login([FromBody] AccountLoginDTO accountDto)
         {
-            var collection = _context.GetCollection<Account>("Accounts");
+            var collection = _context.GetCollection<Account>("Account");
             var filter = Builders<Account>.Filter.Eq(a => a.Email, accountDto.Email) &
                          Builders<Account>.Filter.Eq(a => a.Password, accountDto.Password);
 
@@ -30,15 +38,32 @@ namespace backendTinTuc.Controllers
                 return Unauthorized(new { message = "Invalid email or password" });
             }
 
-            // Nếu cần tạo một token JWT, bạn có thể làm ở đây
-            // var token = GenerateJwtToken(account);
+            // Create JWT token
+            var token = GenerateJwtToken(account);
 
-            return Ok(account);
+            return Ok(new
+            {
+                message = "Login successful",
+                token = token
+            });
         }
 
-        // private string GenerateJwtToken(Account account)
-        // {
-        //     // Implement JWT token generation logic here
-        // }
+        private string GenerateJwtToken(Account account)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+                    new Claim(ClaimTypes.Name, account.Id.ToString()),
+                    new Claim(ClaimTypes.Email, account.Email)
+                }),
+                Expires = DateTime.UtcNow.AddHours(1),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
     }
 }

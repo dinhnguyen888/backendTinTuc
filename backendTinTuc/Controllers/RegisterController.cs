@@ -1,12 +1,11 @@
 ﻿using backendTinTuc.Models;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Driver;
 using System;
 using System.Threading.Tasks;
 
 [ApiController]
 [Route("api/[controller]")]
-public class RegisterController : Controller
+public class RegisterController : ControllerBase
 {
     private readonly AccountRepository _accountRepository;
 
@@ -23,10 +22,10 @@ public class RegisterController : Controller
             return BadRequest("Invalid account data.");
         }
 
-        var existingAccount = await _accountRepository.GetByIdAsync(accountDto.Email);
-        if (existingAccount == null)
+        var existingAccount = await _accountRepository.GetByEmailAsync(accountDto.Email);
+        if (existingAccount != null)
         {
-            return BadRequest("Account already exits.");
+            return BadRequest("Account already exists.");
         }
 
         var newAccount = new Account

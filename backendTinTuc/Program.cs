@@ -1,7 +1,9 @@
-﻿using backendTinTuc.Models;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,7 +26,10 @@ builder.Services.AddSingleton(sp =>
     return client.GetDatabase(settings.DatabaseName);
 });
 
-//Add AccountRepository as a service
+// Register MongoDbContext as a singleton service
+builder.Services.AddSingleton<MongoDbContext>();
+
+// Register AccountRepository as a singleton service
 builder.Services.AddSingleton<AccountRepository>();
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
@@ -46,15 +51,38 @@ builder.Services.AddCors(options =>
 });
 builder.Services.AddMvc();
 
+// Configure JWT authentication
+var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Key"]);
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(key)
+    };
+});
+
 var app = builder.Build();
-// Check MongoDB connection 
+
+// Check MongoDB connection
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
         var database = services.GetRequiredService<IMongoDatabase>();
-       
         database.RunCommandAsync((Command<BsonDocument>)"{ping:1}").Wait();
         Console.WriteLine("MongoDB connection is healthy");
     }
@@ -63,6 +91,7 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine($"MongoDB connection failed: {ex.Message}");
     }
 }
+
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
@@ -72,6 +101,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors(MyAllowSpecificOrigins);
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
