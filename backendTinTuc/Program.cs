@@ -31,7 +31,8 @@ builder.Services.AddSingleton<MongoDbContext>();
 
 // đăng ký dịch vụ singleton  AccountRepository
 builder.Services.AddSingleton<AccountRepository>();
-
+//đăng ký dịch vụ singleton CommentRepository
+builder.Services.AddScoped<CommentRepository>();
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 // thêm dịch vụ 
