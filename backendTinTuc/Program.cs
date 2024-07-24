@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using backendTinTuc.Repositories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson;
@@ -31,8 +32,15 @@ builder.Services.AddSingleton<MongoDbContext>();
 
 // đăng ký dịch vụ singleton  AccountRepository
 builder.Services.AddSingleton<AccountRepository>();
+
+
+// Register NewsRepository as a singleton service
+builder.Services.AddSingleton<INewsRepository, NewsRepository>();
+
+
 //đăng ký dịch vụ singleton CommentRepository
 builder.Services.AddScoped<CommentRepository>();
+
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 // thêm dịch vụ 
