@@ -8,18 +8,18 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure MongoDB settings
+// cấu hành MongoDb setting
 builder.Services.Configure<MongoDbSettings>(
     builder.Configuration.GetSection(nameof(MongoDbSettings)));
 
-// Register MongoDB client as a singleton service
+//Đăng ký dịch vụ singleton MongoDB client 
 builder.Services.AddSingleton<IMongoClient, MongoClient>(sp =>
 {
     var settings = sp.GetRequiredService<IOptions<MongoDbSettings>>().Value;
     return new MongoClient(settings.ConnectionString);
 });
 
-// Register MongoDB database as a singleton service
+// đăng kí dịch vụ singleton MongoDB database
 builder.Services.AddSingleton(sp =>
 {
     var settings = sp.GetRequiredService<IOptions<MongoDbSettings>>().Value;
@@ -27,21 +27,28 @@ builder.Services.AddSingleton(sp =>
     return client.GetDatabase(settings.DatabaseName);
 });
 
-// Register MongoDbContext as a singleton service
+// đăng ký dịch vụ singleton MongoDbContext
 builder.Services.AddSingleton<MongoDbContext>();
 
-// Register AccountRepository as a singleton service
+// đăng ký dịch vụ singleton  AccountRepository
 builder.Services.AddSingleton<AccountRepository>();
+
 
 // Register NewsRepository as a singleton service
 builder.Services.AddSingleton<INewsRepository, NewsRepository>();
 
+
+//đăng ký dịch vụ singleton CommentRepository
+builder.Services.AddScoped<CommentRepository>();
+
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
-// Add services to the container
+// thêm dịch vụ 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: MyAllowSpecificOrigins,
@@ -55,7 +62,7 @@ builder.Services.AddCors(options =>
 });
 builder.Services.AddMvc();
 
-// Configure JWT authentication
+// cấu hình jwt auth
 var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Key"]);
 builder.Services.AddAuthentication(options =>
 {
@@ -77,10 +84,17 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(key)
     };
 });
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("UserPolicy", policy =>
+        policy.RequireRole("User"));
+    options.AddPolicy("AdminPolicy", policy =>
+        policy.RequireRole("Admin"));
+});
 
 var app = builder.Build();
 
-// Check MongoDB connection
+// Check kết nối  MongoDB 
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -96,7 +110,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Configure the HTTP request pipeline
+// cấu hình HTTPS request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -105,8 +119,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors(MyAllowSpecificOrigins);
+
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<JwtMiddleware>();
+
 app.MapControllers();
 
 app.Run();

@@ -1,5 +1,7 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.OpenApi;
 
 public class Account
 {
@@ -22,6 +24,12 @@ public class Account
     [BsonElement("UpdatedAt")]
     public DateTime UpdatedAt { get; set; }
 
-    [BsonElement("Token")]
-    public DateTime Token { get; set; }
+    [BsonRepresentation(BsonType.String)]
+    [BsonElement("Roles")]
+    public Roles Roles { get; set; }
+}
+public enum Roles
+{
+    User,
+    Admin
 }

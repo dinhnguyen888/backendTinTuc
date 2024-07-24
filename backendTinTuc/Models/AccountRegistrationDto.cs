@@ -12,5 +12,7 @@ namespace backendTinTuc.Models
 
         [BsonElement("Name")]
         public string Name { get; set; }
+
+   
     }
 }
