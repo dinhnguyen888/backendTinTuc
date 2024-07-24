@@ -21,7 +21,18 @@ namespace backendTinTuc.Controllers
         public async Task<IActionResult> GetAllNews()
         {
             var news = await _newsRepository.GetAllNewsAsync();
-            return Ok(news);
+            var newsDTOs = news.Select(n => new NewsDTO
+            {
+                Source = new SourceDTO { Id = n.Source.Id, Name = n.Source.Name },
+                Author = n.Author,
+                Title = n.Title,
+                Description = n.Description,
+                Url = n.Url,
+                UrlToImage = n.UrlToImage,
+                PublishedAt = n.PublishedAt,
+                Content = n.Content
+            });
+            return Ok(newsDTOs);
         }
 
         [HttpGet("{id}")]
@@ -32,27 +43,65 @@ namespace backendTinTuc.Controllers
             {
                 return NotFound();
             }
-            return Ok(news);
+            var newsDTO = new NewsDTO
+            {
+                Source = new SourceDTO { Id = news.Source.Id, Name = news.Source.Name },
+                Author = news.Author,
+                Title = news.Title,
+                Description = news.Description,
+                Url = news.Url,
+                UrlToImage = news.UrlToImage,
+                PublishedAt = news.PublishedAt,
+                Content = news.Content
+            };
+            return Ok(newsDTO);
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateNews([FromBody] News news)
+        public async Task<IActionResult> CreateNews([FromBody] NewsDTO newsDTO)
         {
-            if (news == null)
+            if (newsDTO == null)
             {
                 return BadRequest();
             }
+
+            var news = new News
+            {
+                Source = new Source { Id = newsDTO.Source.Id, Name = newsDTO.Source.Name },
+                Author = newsDTO.Author,
+                Title = newsDTO.Title,
+                Description = newsDTO.Description,
+                Url = newsDTO.Url,
+                UrlToImage = newsDTO.UrlToImage,
+                PublishedAt = newsDTO.PublishedAt,
+                Content = newsDTO.Content
+            };
+
             await _newsRepository.CreateNewsAsync(news);
             return CreatedAtAction(nameof(GetNewsById), new { id = news.Id }, news);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateNews(string id, [FromBody] News news)
+        public async Task<IActionResult> UpdateNews(string id, [FromBody] NewsDTO newsDTO)
         {
-            if (news == null || id != news.Id)
+            if (newsDTO == null)
             {
                 return BadRequest();
             }
+
+            var news = new News
+            {
+                Id = id,
+                Source = new Source { Id = newsDTO.Source.Id, Name = newsDTO.Source.Name },
+                Author = newsDTO.Author,
+                Title = newsDTO.Title,
+                Description = newsDTO.Description,
+                Url = newsDTO.Url,
+                UrlToImage = newsDTO.UrlToImage,
+                PublishedAt = newsDTO.PublishedAt,
+                Content = newsDTO.Content
+            };
+
             var updated = await _newsRepository.UpdateNewsAsync(id, news);
             if (!updated)
             {

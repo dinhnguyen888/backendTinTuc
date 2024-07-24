@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
+﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace backendTinTuc.Models
 {
@@ -6,6 +7,7 @@ namespace backendTinTuc.Models
     {
 
         [BsonElement("Id")]
+        [BsonRepresentation(BsonType.ObjectId)]
         public string Id { get; set; }
 
 
@@ -45,6 +47,7 @@ namespace backendTinTuc.Models
     {
 
         [BsonElement("Id")]
+ 
         public string Id { get; set; }
 
 
