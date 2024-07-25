@@ -9,6 +9,7 @@ namespace backendTinTuc.Repositories
     {
         Task<IEnumerable<News>> GetAllNewsAsync();
         Task<News> GetNewsByIdAsync(string id);
+        Task<News> GetNewsByUrlAsync(string url); // Thêm phương thức này
         Task CreateNewsAsync(News news);
         Task<bool> UpdateNewsAsync(string id, News news);
         Task<bool> DeleteNewsAsync(string id);
@@ -31,6 +32,11 @@ namespace backendTinTuc.Repositories
         public async Task<News> GetNewsByIdAsync(string id)
         {
             return await _newsCollection.Find(news => news.Id == id).FirstOrDefaultAsync();
+        }
+
+        public async Task<News> GetNewsByUrlAsync(string url)
+        {
+            return await _newsCollection.Find(news => news.Url == url).FirstOrDefaultAsync();
         }
 
         public async Task CreateNewsAsync(News news)

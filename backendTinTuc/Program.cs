@@ -8,18 +8,18 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// cấu hành MongoDb setting
+// Cấu hình MongoDb setting
 builder.Services.Configure<MongoDbSettings>(
     builder.Configuration.GetSection(nameof(MongoDbSettings)));
 
-//Đăng ký dịch vụ singleton MongoDB client 
+// Đăng ký dịch vụ singleton MongoDB client 
 builder.Services.AddSingleton<IMongoClient, MongoClient>(sp =>
 {
     var settings = sp.GetRequiredService<IOptions<MongoDbSettings>>().Value;
     return new MongoClient(settings.ConnectionString);
 });
 
-// đăng kí dịch vụ singleton MongoDB database
+// Đăng ký dịch vụ singleton MongoDB database
 builder.Services.AddSingleton(sp =>
 {
     var settings = sp.GetRequiredService<IOptions<MongoDbSettings>>().Value;
@@ -27,23 +27,21 @@ builder.Services.AddSingleton(sp =>
     return client.GetDatabase(settings.DatabaseName);
 });
 
-// đăng ký dịch vụ singleton MongoDbContext
+// Đăng ký dịch vụ singleton MongoDbContext
 builder.Services.AddSingleton<MongoDbContext>();
 
-// đăng ký dịch vụ singleton  AccountRepository
+// Đăng ký dịch vụ singleton AccountRepository
 builder.Services.AddSingleton<AccountRepository>();
-
 
 // Register NewsRepository as a singleton service
 builder.Services.AddSingleton<INewsRepository, NewsRepository>();
 
-
-//đăng ký dịch vụ singleton CommentRepository
+// Đăng ký dịch vụ singleton CommentRepository
 builder.Services.AddScoped<CommentRepository>();
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
-// thêm dịch vụ 
+// Thêm dịch vụ
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -62,7 +60,7 @@ builder.Services.AddCors(options =>
 });
 builder.Services.AddMvc();
 
-// cấu hình jwt auth
+// Cấu hình jwt auth
 var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Key"]);
 builder.Services.AddAuthentication(options =>
 {
@@ -110,7 +108,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// cấu hình HTTPS request pipeline
+// Cấu hình HTTPS request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -122,7 +120,6 @@ app.UseCors(MyAllowSpecificOrigins);
 
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseMiddleware<JwtMiddleware>();
 
 app.MapControllers();
 
