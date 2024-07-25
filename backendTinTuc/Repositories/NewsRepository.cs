@@ -18,10 +18,12 @@ namespace backendTinTuc.Repositories
     public class NewsRepository : INewsRepository
     {
         private readonly IMongoCollection<News> _newsCollection;
+        private readonly CommentRepository _commentRepository;
 
-        public NewsRepository(IMongoDatabase database)
+        public NewsRepository(IMongoDatabase database, CommentRepository commentRepository)
         {
             _newsCollection = database.GetCollection<News>("News");
+            _commentRepository = commentRepository;
         }
 
         public async Task<IEnumerable<News>> GetAllNewsAsync()
@@ -53,7 +55,13 @@ namespace backendTinTuc.Repositories
         public async Task<bool> DeleteNewsAsync(string id)
         {
             var result = await _newsCollection.DeleteOneAsync(news => news.Id == id);
-            return result.IsAcknowledged && result.DeletedCount > 0;
+            if (result.IsAcknowledged && result.DeletedCount > 0)
+            {
+                // Delete all comments related to the news
+                await _commentRepository.DeleteCommentsByNewsIdAsync(id);
+                return true;
+            }
+            return false;
         }
     }
 }

@@ -43,4 +43,10 @@ public class CommentRepository
 
         await _collection.UpdateOneAsync(filter, update);
     }
+
+    public async Task DeleteCommentsByNewsIdAsync(string newsId)
+    {
+        var filter = Builders<Comment>.Filter.Eq(c => c.Id, newsId);
+        await _collection.DeleteManyAsync(filter);
+    }
 }
