@@ -35,7 +35,12 @@ builder.Services.AddSingleton<AccountRepository>();
 
 
 // Register NewsRepository as a singleton service
-builder.Services.AddSingleton<INewsRepository, NewsRepository>();
+builder.Services.AddSingleton<INewsRepository, NewsRepository>(sp =>
+{
+    var database = sp.GetRequiredService<IMongoDatabase>();
+    var commentRepository = sp.GetRequiredService<CommentRepository>();
+    return new NewsRepository(database, commentRepository);
+});
 
 
 //đăng ký dịch vụ singleton CommentRepository

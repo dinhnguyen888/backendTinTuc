@@ -17,10 +17,12 @@ namespace backendTinTuc.Repositories
     public class NewsRepository : INewsRepository
     {
         private readonly IMongoCollection<News> _newsCollection;
+        private readonly CommentRepository _commentRepository;
 
-        public NewsRepository(IMongoDatabase database)
+        public NewsRepository(IMongoDatabase database, CommentRepository commentRepository)
         {
             _newsCollection = database.GetCollection<News>("News");
+            _commentRepository = commentRepository;
         }
 
         public async Task<IEnumerable<News>> GetAllNewsAsync()
