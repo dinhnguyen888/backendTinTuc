@@ -44,7 +44,7 @@ builder.Services.AddSingleton<INewsRepository, NewsRepository>(sp =>
 
 
 //đăng ký dịch vụ singleton CommentRepository
-builder.Services.AddScoped<CommentRepository>();
+builder.Services.AddSingleton<CommentRepository>();
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
