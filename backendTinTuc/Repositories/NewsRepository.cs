@@ -49,7 +49,13 @@ namespace backendTinTuc.Repositories
         public async Task<bool> DeleteNewsAsync(string id)
         {
             var result = await _newsCollection.DeleteOneAsync(news => news.Id == id);
-            return result.IsAcknowledged && result.DeletedCount > 0;
+            if (result.IsAcknowledged && result.DeletedCount > 0)
+            {
+                // Delete all comments related to the news
+                await _commentRepository.DeleteCommentsByNewsIdAsync(id);
+                return true;
+            }
+            return false;
         }
     }
 }
