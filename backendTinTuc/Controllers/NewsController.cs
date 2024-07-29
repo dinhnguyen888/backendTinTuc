@@ -2,6 +2,7 @@
 using backendTinTuc.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace backendTinTuc.Controllers
@@ -23,14 +24,13 @@ namespace backendTinTuc.Controllers
             var news = await _newsRepository.GetAllNewsAsync();
             var newsDTOs = news.Select(n => new NewsDTO
             {
-                Source = new SourceDTO { Id = n.Source.Id, Name = n.Source.Name },
-                Author = n.Author,
+                Id = n.Id,
                 Title = n.Title,
+                LinkDetail = n.LinkDetail,
+                ImageUrl = n.ImageUrl,
                 Description = n.Description,
-                Url = n.Url,
-                UrlToImage = n.UrlToImage,
-                PublishedAt = n.PublishedAt,
-                Content = n.Content
+                Content = n.Content,
+                Type = n.Type
             });
             return Ok(newsDTOs);
         }
@@ -45,14 +45,12 @@ namespace backendTinTuc.Controllers
             }
             var newsDTO = new NewsDTO
             {
-                Source = new SourceDTO { Id = news.Source.Id, Name = news.Source.Name },
-                Author = news.Author,
                 Title = news.Title,
+                LinkDetail = news.LinkDetail,
+                ImageUrl = news.ImageUrl,
                 Description = news.Description,
-                Url = news.Url,
-                UrlToImage = news.UrlToImage,
-                PublishedAt = news.PublishedAt,
-                Content = news.Content
+                Content = news.Content,
+                Type = news.Type
             };
             return Ok(newsDTO);
         }
@@ -67,14 +65,12 @@ namespace backendTinTuc.Controllers
 
             var news = new News
             {
-                Source = new Source { Id = newsDTO.Source.Id, Name = newsDTO.Source.Name },
-                Author = newsDTO.Author,
                 Title = newsDTO.Title,
+                LinkDetail = newsDTO.LinkDetail,
+                ImageUrl = newsDTO.ImageUrl,
                 Description = newsDTO.Description,
-                Url = newsDTO.Url,
-                UrlToImage = newsDTO.UrlToImage,
-                PublishedAt = newsDTO.PublishedAt,
-                Content = newsDTO.Content
+                Content = newsDTO.Content,
+                Type = newsDTO.Type
             };
 
             await _newsRepository.CreateNewsAsync(news);
@@ -92,14 +88,12 @@ namespace backendTinTuc.Controllers
             var news = new News
             {
                 Id = id,
-                Source = new Source { Id = newsDTO.Source.Id, Name = newsDTO.Source.Name },
-                Author = newsDTO.Author,
                 Title = newsDTO.Title,
+                LinkDetail = newsDTO.LinkDetail,
+                ImageUrl = newsDTO.ImageUrl,
                 Description = newsDTO.Description,
-                Url = newsDTO.Url,
-                UrlToImage = newsDTO.UrlToImage,
-                PublishedAt = newsDTO.PublishedAt,
-                Content = newsDTO.Content
+                Content = newsDTO.Content,
+                Type = newsDTO.Type
             };
 
             var updated = await _newsRepository.UpdateNewsAsync(id, news);
@@ -118,7 +112,7 @@ namespace backendTinTuc.Controllers
             {
                 return NotFound();
             }
-            return NoContent();
+            return Ok();
         }
     }
 }

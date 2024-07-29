@@ -1,4 +1,5 @@
 ﻿using backendTinTuc.Repositories;
+using backendTinTuc.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -8,18 +9,16 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Cấu hình MongoDb setting
+// MongoDb settings and services configuration
 builder.Services.Configure<MongoDbSettings>(
     builder.Configuration.GetSection(nameof(MongoDbSettings)));
 
-// Đăng ký dịch vụ singleton MongoDB client 
 builder.Services.AddSingleton<IMongoClient, MongoClient>(sp =>
 {
     var settings = sp.GetRequiredService<IOptions<MongoDbSettings>>().Value;
     return new MongoClient(settings.ConnectionString);
 });
 
-// Đăng ký dịch vụ singleton MongoDB database
 builder.Services.AddSingleton(sp =>
 {
     var settings = sp.GetRequiredService<IOptions<MongoDbSettings>>().Value;
@@ -27,27 +26,14 @@ builder.Services.AddSingleton(sp =>
     return client.GetDatabase(settings.DatabaseName);
 });
 
-// Đăng ký dịch vụ singleton MongoDbContext
 builder.Services.AddSingleton<MongoDbContext>();
-
-// Đăng ký dịch vụ singleton AccountRepository
 builder.Services.AddSingleton<AccountRepository>();
-
-// Register NewsRepository as a singleton service
-builder.Services.AddSingleton<INewsRepository, NewsRepository>(sp =>
-{
-    var database = sp.GetRequiredService<IMongoDatabase>();
-    var commentRepository = sp.GetRequiredService<CommentRepository>();
-    return new NewsRepository(database, commentRepository);
-});
-
-
-//Đăng ký dịch vụ singleton CommentRepository
+builder.Services.AddSingleton<INewsRepository, NewsRepository>();
 builder.Services.AddSingleton<CommentRepository>();
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
-// Thêm dịch vụ
+// Additional service configuration
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -66,7 +52,7 @@ builder.Services.AddCors(options =>
 });
 builder.Services.AddMvc();
 
-// Cấu hình jwt auth
+// JWT authentication configuration
 var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Key"]);
 builder.Services.AddAuthentication(options =>
 {
@@ -98,7 +84,7 @@ builder.Services.AddAuthorization(options =>
 
 var app = builder.Build();
 
-// Check kết nối  MongoDB 
+// MongoDB connection check and crawling
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -107,6 +93,20 @@ using (var scope = app.Services.CreateScope())
         var database = services.GetRequiredService<IMongoDatabase>();
         database.RunCommandAsync((Command<BsonDocument>)"{ping:1}").Wait();
         Console.WriteLine("MongoDB connection is healthy");
+
+        // Create an instance of CrawlingData and start crawling
+        var crawler = new CrawlingData(database);
+        crawler.StartCrawling();
+
+        // Check if the crawling was successful
+        if (crawler.IsCrawlingSuccessful)
+        {
+            Console.WriteLine("Crawling completed successfully.");
+        }
+        else
+        {
+            Console.WriteLine("Crawling failed.");
+        }
     }
     catch (Exception ex)
     {
@@ -114,7 +114,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Cấu hình HTTPS request pipeline
+// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

@@ -2,19 +2,12 @@
 {
     public class NewsDTO
     {
-        public SourceDTO Source { get; set; }
-        public string Author { get; set; }
-        public string Title { get; set; }
-        public string Description { get; set; }
-        public string Url { get; set; }
-        public string UrlToImage { get; set; }
-        public DateTime PublishedAt { get; set; }
-        public string Content { get; set; }
-    }
-
-    public class SourceDTO
-    {
         public string Id { get; set; }
-        public string Name { get; set; }
+        public string Title { get; set; }
+        public string LinkDetail { get; set; }
+        public string ImageUrl { get; set; }
+        public string Description { get; set; }
+        public string Content { get; set; }
+        public string Type { get; set; } // Thêm trường Type để lưu kiểu
     }
 }
