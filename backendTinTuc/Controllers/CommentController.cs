@@ -12,6 +12,7 @@ public class CommentsController : ControllerBase
         _commentRepository = commentRepository;
     }
 
+    
     [HttpGet]
     public async Task<ActionResult<List<Comment>>> Get()
     {
@@ -19,6 +20,7 @@ public class CommentsController : ControllerBase
         return Ok(comments);
     }
 
+    
     [HttpGet("{id:length(24)}", Name = "GetComment")]
     public async Task<ActionResult<Comment>> Get(string id)
     {
@@ -31,6 +33,7 @@ public class CommentsController : ControllerBase
         return Ok(comment);
     }
 
+    [Authorize(Roles = "Admin, User")]
     [HttpPost]
     public async Task<ActionResult<Comment>> Create(Comment comment)
     {
@@ -38,6 +41,7 @@ public class CommentsController : ControllerBase
         return CreatedAtRoute("GetComment", new { id = comment.Id.ToString() }, comment);
     }
 
+    [Authorize(Roles = "Admin, User")]
     [HttpPut("{id:length(24)}")]
     public async Task<IActionResult> Update(string id, Comment updatedComment)
     {
@@ -51,6 +55,7 @@ public class CommentsController : ControllerBase
         await _commentRepository.UpdateAsync(id, updatedComment);
         return NoContent();
     }
+
 
     [Authorize(Roles = "Admin, User")]
     [HttpDelete("{commentId:length(24)}/{userId}")]

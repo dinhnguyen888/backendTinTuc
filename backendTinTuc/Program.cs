@@ -30,6 +30,7 @@ builder.Services.AddSingleton<MongoDbContext>();
 builder.Services.AddSingleton<AccountRepository>();
 builder.Services.AddSingleton<INewsRepository, NewsRepository>();
 builder.Services.AddSingleton<CommentRepository>();
+builder.Services.AddSingleton<CrawlingData>();
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
@@ -94,19 +95,19 @@ using (var scope = app.Services.CreateScope())
         database.RunCommandAsync((Command<BsonDocument>)"{ping:1}").Wait();
         Console.WriteLine("MongoDB connection is healthy");
 
-        // Create an instance of CrawlingData and start crawling
-        var crawler = new CrawlingData(database);
-        crawler.StartCrawling();
+        // tạo một instance để crawl data
+        //var crawler = new CrawlingData(database);
+        //crawler.StartCrawling();
 
         // Check if the crawling was successful
-        if (crawler.IsCrawlingSuccessful)
-        {
-            Console.WriteLine("Crawling completed successfully.");
-        }
-        else
-        {
-            Console.WriteLine("Crawling failed.");
-        }
+        //if (crawler.IsCrawlingSuccessful)
+        //{
+        //    Console.WriteLine("Crawling completed successfully.");
+        //}
+        //else
+        //{
+        //    Console.WriteLine("Crawling failed.");
+        //}
     }
     catch (Exception ex)
     {

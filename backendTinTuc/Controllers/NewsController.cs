@@ -1,5 +1,6 @@
 ﻿using backendTinTuc.Models;
 using backendTinTuc.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
@@ -55,6 +56,7 @@ namespace backendTinTuc.Controllers
             return Ok(newsDTO);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> CreateNews([FromBody] NewsDTO newsDTO)
         {
@@ -77,6 +79,7 @@ namespace backendTinTuc.Controllers
             return CreatedAtAction(nameof(GetNewsById), new { id = news.Id }, news);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateNews(string id, [FromBody] NewsDTO newsDTO)
         {
@@ -104,6 +107,7 @@ namespace backendTinTuc.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteNews(string id)
         {
