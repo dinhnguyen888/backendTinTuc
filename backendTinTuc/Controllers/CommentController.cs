@@ -40,13 +40,6 @@ public class CommentsController : ControllerBase
     public async Task<ActionResult<Comment>> Create(Comment comment)
     {
         await _commentRepository.CreateAsync(comment);
-
-        if (comment.Comments.Count > 0)
-        {
-            var content = comment.Comments[0].Content;
-            await _webSocketService.BroadcastMessageAsync(content);
-        }
-
         return CreatedAtRoute("GetComment", new { id = comment.Id.ToString() }, comment);
     }
 
