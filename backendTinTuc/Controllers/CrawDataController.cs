@@ -1,5 +1,6 @@
 ﻿using backendTinTuc.Service;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 
 namespace backendTinTuc.Controllers
 {
@@ -19,7 +20,6 @@ namespace backendTinTuc.Controllers
         {
             _crawlingData.StartCrawling();
 
-            // Check if the crawling was successful
             if (_crawlingData.IsCrawlingSuccessful)
             {
                 return Ok("Crawling completed successfully.");
@@ -28,6 +28,40 @@ namespace backendTinTuc.Controllers
             {
                 return StatusCode(500, "Crawling failed.");
             }
+        }
+
+        [HttpGet("latest")]
+        public IActionResult GetLatestData()
+        {
+            try
+            {
+                _crawlingData.GetLatestData();
+                return Ok("Latest data fetched and stored successfully.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
+        [HttpPost("update-sections")]
+        public IActionResult UpdateSectionList([FromBody] List<string> sections)
+        {
+            if (sections == null || sections.Count == 0)
+            {
+                return BadRequest("Section list cannot be empty.");
+            }
+
+            _crawlingData.UpdateSectionList(sections);
+            return Ok("Section list updated successfully.");
+        }
+
+        // New method to get the current categories
+        [HttpGet("sections")]
+        public IActionResult GetCategories()
+        {
+            var categories = _crawlingData.GetSections();
+            return Ok(categories);
         }
     }
 }
