@@ -6,12 +6,10 @@ using Microsoft.AspNetCore.Mvc;
 public class CommentsController : ControllerBase
 {
     private readonly CommentRepository _commentRepository;
-    private readonly WebSocketServerService _webSocketService;
 
-    public CommentsController(CommentRepository commentRepository, WebSocketServerService webSocketService)
+    public CommentsController(CommentRepository commentRepository)
     {
         _commentRepository = commentRepository;
-        _webSocketService = webSocketService;
     }
 
 
