@@ -31,6 +31,12 @@ builder.Services.AddSingleton<AccountRepository>();
 builder.Services.AddSingleton<INewsRepository, NewsRepository>();
 builder.Services.AddSingleton<CommentRepository>();
 builder.Services.AddSingleton<CrawlingData>();
+builder.Services.AddSingleton<WebSocketServerService>(sp =>
+{
+    var service = new WebSocketServerService("http://localhost:5000/ws/");
+    service.Start();
+    return service;
+});
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
@@ -121,6 +127,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// Stop WebSocket server when the application is stopping
+var webSocketService = app.Services.GetRequiredService<WebSocketServerService>();
+app.Lifetime.ApplicationStopping.Register(webSocketService.Stop);
 
 app.UseHttpsRedirection();
 app.UseCors(MyAllowSpecificOrigins);

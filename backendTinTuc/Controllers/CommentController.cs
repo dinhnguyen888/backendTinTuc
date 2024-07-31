@@ -6,13 +6,15 @@ using Microsoft.AspNetCore.Mvc;
 public class CommentsController : ControllerBase
 {
     private readonly CommentRepository _commentRepository;
+    private readonly WebSocketServerService _webSocketService;
 
-    public CommentsController(CommentRepository commentRepository)
+    public CommentsController(CommentRepository commentRepository, WebSocketServerService webSocketService)
     {
         _commentRepository = commentRepository;
+        _webSocketService = webSocketService;
     }
 
-    
+
     [HttpGet]
     public async Task<ActionResult<List<Comment>>> Get()
     {
@@ -38,6 +40,13 @@ public class CommentsController : ControllerBase
     public async Task<ActionResult<Comment>> Create(Comment comment)
     {
         await _commentRepository.CreateAsync(comment);
+
+        if (comment.Comments.Count > 0)
+        {
+            var content = comment.Comments[0].Content;
+            await _webSocketService.BroadcastMessageAsync(content);
+        }
+
         return CreatedAtRoute("GetComment", new { id = comment.Id.ToString() }, comment);
     }
 
