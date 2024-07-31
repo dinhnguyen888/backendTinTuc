@@ -31,12 +31,7 @@ builder.Services.AddSingleton<AccountRepository>();
 builder.Services.AddSingleton<INewsRepository, NewsRepository>();
 builder.Services.AddSingleton<CommentRepository>();
 builder.Services.AddSingleton<CrawlingData>();
-builder.Services.AddSingleton<WebSocketServerService>(sp =>
-{
-    var service = new WebSocketServerService("http://localhost:5000/ws/");
-    service.Start();
-    return service;
-});
+builder.Services.AddSingleton<WebSocketServerService>(sp => new WebSocketServerService("http://localhost:5000/ws/"));
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
@@ -121,16 +116,16 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+// Khởi động WebSocket server
+var webSocketService = app.Services.GetRequiredService<WebSocketServerService>();
+webSocketService.Start();
+
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-// Stop WebSocket server when the application is stopping
-var webSocketService = app.Services.GetRequiredService<WebSocketServerService>();
-app.Lifetime.ApplicationStopping.Register(webSocketService.Stop);
 
 app.UseHttpsRedirection();
 app.UseCors(MyAllowSpecificOrigins);
@@ -141,3 +136,8 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+app.Lifetime.ApplicationStopping.Register(() =>
+{
+    webSocketService.Stop();
+});
