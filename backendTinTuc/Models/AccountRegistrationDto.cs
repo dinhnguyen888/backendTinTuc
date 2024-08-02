@@ -13,6 +13,8 @@ namespace backendTinTuc.Models
         [BsonElement("Name")]
         public string Name { get; set; }
 
-   
+        [BsonElement("Roles")]
+        public string Roles { get; set; }
+
     }
 }

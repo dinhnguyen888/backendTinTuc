@@ -119,6 +119,22 @@ namespace backendTinTuc.Controllers
             return Ok();
         }
 
-      
+        [HttpGet("type/{type}")]
+        public async Task<IActionResult> GetNewsByType(string type)
+        {
+            var news = await _newsRepository.GetNewsByTypeAsync(type);
+            var newsDTOs = news.Select(n => new NewsDTO
+            {
+                Id = n.Id,
+                Title = n.Title,
+                LinkDetail = n.LinkDetail,
+                ImageUrl = n.ImageUrl,
+                Description = n.Description,
+                Content = n.Content,
+                Type = n.Type
+            });
+            return Ok(newsDTOs);
+        }
+
     }
 }

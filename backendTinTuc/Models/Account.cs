@@ -25,10 +25,10 @@ public class Account
 
     [BsonRepresentation(BsonType.String)]
     [BsonElement("Roles")]
-    public Roles Roles { get; set; }
+    public string Roles { get; set; }
 }
-public enum Roles
-{
-    User,
-    Admin
-}
+//public enum Roles
+//{
+  //  User,
+  //  Admin
+//}

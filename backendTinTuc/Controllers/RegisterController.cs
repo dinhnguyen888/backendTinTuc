@@ -33,7 +33,7 @@ public class RegisterController : ControllerBase
             Email = accountDto.Email,
             Password = accountDto.Password,
             Name = accountDto.Name,
-            Roles = Roles.User,
+            Roles = accountDto.Roles,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

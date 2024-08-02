@@ -12,6 +12,7 @@ namespace backendTinTuc.Repositories
         Task CreateNewsAsync(News news);
         Task<bool> UpdateNewsAsync(string id, News news);
         Task<bool> DeleteNewsAsync(string id);
+        Task<IEnumerable<News>> GetNewsByTypeAsync(string type); // Add this line
     }
 
     public class NewsRepository : INewsRepository
@@ -58,5 +59,11 @@ namespace backendTinTuc.Repositories
             }
             return false;
         }
+
+        public async Task<IEnumerable<News>> GetNewsByTypeAsync(string type)
+        {
+            return await _newsCollection.Find(news => news.Type == type).ToListAsync();
+        }
+
     }
 }
