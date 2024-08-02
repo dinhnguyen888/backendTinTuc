@@ -31,7 +31,6 @@ builder.Services.AddSingleton<AccountRepository>();
 builder.Services.AddSingleton<INewsRepository, NewsRepository>();
 builder.Services.AddSingleton<CommentRepository>();
 builder.Services.AddSingleton<CrawlingData>();
-builder.Services.AddSingleton<WebSocketServerService>(sp => new WebSocketServerService("http://localhost:5000/ws/"));
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
@@ -46,10 +45,10 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
                       policy =>
                       {
-                          policy.WithOrigins("http://localhost:3000",
-                                             "http://localhost:3001")
+                          policy.WithOrigins("http://localhost:3000")
                                 .AllowAnyMethod()
-                                .AllowAnyHeader();
+                                .AllowAnyHeader()
+                                .AllowCredentials(); // Allow credentials
                       });
 });
 builder.Services.AddMvc();
@@ -84,6 +83,9 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole("Admin"));
 });
 
+// SignalR service registration
+builder.Services.AddSignalR();
+
 var app = builder.Build();
 
 // MongoDB connection check and crawling
@@ -96,29 +98,23 @@ using (var scope = app.Services.CreateScope())
         database.RunCommandAsync((Command<BsonDocument>)"{ping:1}").Wait();
         Console.WriteLine("MongoDB connection is healthy");
 
-        // tạo một instance để crawl data
-        //var crawler = new CrawlingData(database);
-        //crawler.StartCrawling();
-
-        // Check if the crawling was successful
-        //if (crawler.IsCrawlingSuccessful)
-        //{
-        //    Console.WriteLine("Crawling completed successfully.");
-        //}
-        //else
-        //{
-        //    Console.WriteLine("Crawling failed.");
-        //}
+        // Optional: Crawling data
+        // var crawler = new CrawlingData(database);
+        // crawler.StartCrawling();
+        // if (crawler.IsCrawlingSuccessful)
+        // {
+        //     Console.WriteLine("Crawling completed successfully.");
+        // }
+        // else
+        // {
+        //     Console.WriteLine("Crawling failed.");
+        // }
     }
     catch (Exception ex)
     {
         Console.WriteLine($"MongoDB connection failed: {ex.Message}");
     }
 }
-
-// Khởi động WebSocket server
-var webSocketService = app.Services.GetRequiredService<WebSocketServerService>();
-webSocketService.Start();
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
@@ -128,16 +124,17 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseRouting();
 app.UseCors(MyAllowSpecificOrigins);
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers();
+    endpoints.MapHub<ChatHub>("/chathub").RequireCors(MyAllowSpecificOrigins);
+});
 
 app.Run();
-
-app.Lifetime.ApplicationStopping.Register(() =>
-{
-    webSocketService.Stop();
-});
