@@ -136,5 +136,22 @@ namespace backendTinTuc.Controllers
             return Ok(newsDTOs);
         }
 
+        [HttpGet("search")]
+        public async Task<IActionResult> SearchByTitle([FromQuery] string title)
+        {
+            var news = await _newsRepository.SearchNewsByTitleAsync(title);
+            var newsDTOs = news.Select(n => new NewsDTO
+            {
+                Id = n.Id,
+                Title = n.Title,
+                LinkDetail = n.LinkDetail,
+                ImageUrl = n.ImageUrl,
+                Description = n.Description,
+                Content = n.Content,
+                Type = n.Type
+            });
+            return Ok(newsDTOs);
+        }
+
     }
 }

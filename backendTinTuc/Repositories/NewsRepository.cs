@@ -13,6 +13,7 @@ namespace backendTinTuc.Repositories
         Task<bool> UpdateNewsAsync(string id, News news);
         Task<bool> DeleteNewsAsync(string id);
         Task<IEnumerable<News>> GetNewsByTypeAsync(string type); // Add this line
+        Task<IEnumerable<News>> SearchNewsByTitleAsync(string title);
     }
 
     public class NewsRepository : INewsRepository
@@ -63,6 +64,12 @@ namespace backendTinTuc.Repositories
         public async Task<IEnumerable<News>> GetNewsByTypeAsync(string type)
         {
             return await _newsCollection.Find(news => news.Type == type).ToListAsync();
+        }
+
+        public async Task<IEnumerable<News>> SearchNewsByTitleAsync(string title)
+        {
+            var filter = Builders<News>.Filter.Regex("Title", new MongoDB.Bson.BsonRegularExpression(title, "i"));
+            return await _newsCollection.Find(filter).ToListAsync();
         }
 
     }

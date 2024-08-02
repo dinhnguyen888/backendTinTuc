@@ -31,7 +31,7 @@ builder.Services.AddSingleton<AccountRepository>();
 builder.Services.AddSingleton<INewsRepository, NewsRepository>();
 builder.Services.AddSingleton<CommentRepository>();
 builder.Services.AddSingleton<CrawlingData>();
-
+builder.Services.AddHostedService<DailyCrawlerService>();
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 // Additional service configuration
@@ -98,9 +98,10 @@ using (var scope = app.Services.CreateScope())
         database.RunCommandAsync((Command<BsonDocument>)"{ping:1}").Wait();
         Console.WriteLine("MongoDB connection is healthy");
 
+       
         // Optional: Crawling data
-        // var crawler = new CrawlingData(database);
-        // crawler.StartCrawling();
+         //var crawler = new CrawlingData(database);
+         //crawler.GetLatestData();
         // if (crawler.IsCrawlingSuccessful)
         // {
         //     Console.WriteLine("Crawling completed successfully.");
