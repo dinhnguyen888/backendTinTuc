@@ -24,7 +24,7 @@ public class JwtMiddleware
         _context = context;
         _logger = logger;
     }
-    
+
     public async Task Invoke(HttpContext context)
     {
         var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
@@ -51,6 +51,7 @@ public class JwtMiddleware
                 ValidIssuer = _configuration["Jwt:Issuer"],
                 ValidateAudience = true,
                 ValidAudience = _configuration["Jwt:Audience"],
+                ValidateLifetime = true,  // Kiểm tra thời hạn mã
                 ClockSkew = TimeSpan.Zero
             }, out SecurityToken validatedToken);
 
@@ -62,14 +63,23 @@ public class JwtMiddleware
 
             context.Items["Account"] = account;
         }
+        catch (SecurityTokenExpiredException ex)
+        {
+            _logger.LogError($"Token expired: {ex.Message}");
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            await context.Response.WriteAsync("TokenExpired"); // Phân biệt lỗi token hết hạn
+        }
         catch (SecurityTokenException ex)
         {
             _logger.LogError($"Security token validation failed: {ex.Message}");
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            await context.Response.WriteAsync("InvalidToken"); // Phân biệt lỗi token không hợp lệ
         }
         catch (Exception ex)
         {
             _logger.LogError($"Error attaching account to context: {ex.Message}");
+            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            await context.Response.WriteAsync("An error occurred.");
         }
     }
-
 }
