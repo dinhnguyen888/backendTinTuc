@@ -19,7 +19,7 @@ namespace backendTinTuc.Service
         public CrawlingData(IMongoDatabase database)
         {
             _database = database;
-            sectionList = new List<string>  { "chinh-tri", "dan-sinh", "lao-dong-viec-lam", "giao-thong" };
+            sectionList = new List<string> { "chinh-tri", "dan-sinh", "lao-dong-viec-lam", "giao-thong" };
             IsCrawlingSuccessful = false;
         }
 
@@ -40,6 +40,7 @@ namespace backendTinTuc.Service
             try
             {
                 var listDataExport = new List<News>();
+                var newsCollection = _database.GetCollection<News>("News");
 
                 foreach (var section in sectionList)
                 {
@@ -66,7 +67,16 @@ namespace backendTinTuc.Service
 
                                 if (newsItem != null)
                                 {
-                                    listDataExport.Add(newsItem);
+                                    // Check if the news item already exists in the database
+                                    var existingNews = newsCollection.Find(n => n.LinkDetail == newsItem.LinkDetail).FirstOrDefault();
+                                    if (existingNews == null)
+                                    {
+                                        listDataExport.Add(newsItem);
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine($"Duplicate news item found: {newsItem.LinkDetail}");
+                                    }
                                 }
                             }
                         }
@@ -79,7 +89,6 @@ namespace backendTinTuc.Service
 
                 if (listDataExport.Count > 0)
                 {
-                    var newsCollection = _database.GetCollection<News>("News");
                     newsCollection.InsertMany(listDataExport);
                     Console.WriteLine("Data inserted into MongoDB.");
                 }

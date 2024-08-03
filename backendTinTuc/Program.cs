@@ -85,7 +85,7 @@ builder.Services.AddAuthorization(options =>
 
 // SignalR service registration
 builder.Services.AddSignalR();
-
+builder.Services.AddHttpClient();
 var app = builder.Build();
 
 // MongoDB connection check and crawling

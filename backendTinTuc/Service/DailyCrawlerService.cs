@@ -12,7 +12,7 @@ public class DailyCrawlerService : BackgroundService
     public DailyCrawlerService(CrawlingData crawler)
     {
         _crawler = crawler;
-        _interval = TimeSpan.FromDays(1); // Set the interval to 1 day
+        _interval = TimeSpan.FromDays(1); // mỗi ngày lấy data 1 lần 
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
