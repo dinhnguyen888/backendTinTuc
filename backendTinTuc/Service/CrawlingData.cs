@@ -11,14 +11,16 @@ namespace backendTinTuc.Service
     public class CrawlingData
     {
         private readonly IMongoDatabase _database;
+        private readonly CommentRepository _commentRepository; // Add CommentRepository
         private readonly string baseUrl = "https://vnexpress.net/";
         private List<string> sectionList; // Global list for categories
 
         public bool IsCrawlingSuccessful { get; private set; }
 
-        public CrawlingData(IMongoDatabase database)
+        public CrawlingData(IMongoDatabase database, CommentRepository commentRepository)
         {
             _database = database;
+            _commentRepository = commentRepository; // Initialize CommentRepository
             sectionList = new List<string> { "chinh-tri", "dan-sinh", "lao-dong-viec-lam", "giao-thong" };
             IsCrawlingSuccessful = false;
         }
@@ -72,6 +74,18 @@ namespace backendTinTuc.Service
                                     if (existingNews == null)
                                     {
                                         listDataExport.Add(newsItem);
+                                        // Insert news item into the database
+                                        newsCollection.InsertOne(newsItem);
+                                        Console.WriteLine("News item inserted into MongoDB.");
+
+                                        // Create and insert an empty Comment model with the same ID as the news item
+                                        var comment = new Comment
+                                        {
+                                            Id = newsItem.Id,
+                                            Comments = new List<UserCommentDetails>()
+                                        };
+                                        _commentRepository.CreateAsync(comment).Wait(); // Ensure the task is completed synchronously
+                                        Console.WriteLine("Comment model created for the news item.");
                                     }
                                     else
                                     {
@@ -85,16 +99,6 @@ namespace backendTinTuc.Service
                             Console.WriteLine($"No news items found on page {i} for category {section}");
                         }
                     }
-                }
-
-                if (listDataExport.Count > 0)
-                {
-                    newsCollection.InsertMany(listDataExport);
-                    Console.WriteLine("Data inserted into MongoDB.");
-                }
-                else
-                {
-                    Console.WriteLine("No data to export. The list is empty.");
                 }
 
                 IsCrawlingSuccessful = true;
@@ -132,6 +136,15 @@ namespace backendTinTuc.Service
                             {
                                 newsCollection.InsertOne(latestNews);
                                 Console.WriteLine("Inserted latest data into MongoDB.");
+
+                                // Create and insert an empty Comment model with the same ID as the news item
+                                var comment = new Comment
+                                {
+                                    Id = latestNews.Id,
+                                    Comments = new List<UserCommentDetails>()
+                                };
+                                _commentRepository.CreateAsync(comment).Wait(); // Ensure the task is completed synchronously
+                                Console.WriteLine("Comment model created for the latest news item.");
                             }
                             else
                             {

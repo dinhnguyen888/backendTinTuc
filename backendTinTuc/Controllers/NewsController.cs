@@ -13,10 +13,12 @@ namespace backendTinTuc.Controllers
     public class NewsController : ControllerBase
     {
         private readonly INewsRepository _newsRepository;
+        private readonly CommentRepository _commentRepository;
 
-        public NewsController(INewsRepository newsRepository)
+        public NewsController(INewsRepository newsRepository, CommentRepository commentRepository)
         {
             _newsRepository = newsRepository;
+            _commentRepository = commentRepository;
         }
 
         [HttpGet]
@@ -75,7 +77,19 @@ namespace backendTinTuc.Controllers
                 Type = newsDTO.Type
             };
 
+            // Insert news into the database
             await _newsRepository.CreateNewsAsync(news);
+
+            // Create an empty Comment model associated with the news ID
+            var comment = new Comment
+            {
+                Id = news.Id, // Use the same ID as the news item
+                Comments = new List<UserCommentDetails>() // Empty comments list
+            };
+
+            // Insert the comment model into the database
+            await _commentRepository.CreateAsync(comment);
+
             return CreatedAtAction(nameof(GetNewsById), new { id = news.Id }, news);
         }
 
@@ -116,6 +130,10 @@ namespace backendTinTuc.Controllers
             {
                 return NotFound();
             }
+
+            // Optionally, you can also delete the associated comments
+            await _commentRepository.DeleteCommentsByNewsIdAsync(id);
+
             return Ok();
         }
 
@@ -152,6 +170,5 @@ namespace backendTinTuc.Controllers
             });
             return Ok(newsDTOs);
         }
-
     }
 }

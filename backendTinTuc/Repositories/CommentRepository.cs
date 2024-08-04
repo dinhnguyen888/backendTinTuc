@@ -1,4 +1,7 @@
-﻿using MongoDB.Driver;
+﻿using backendTinTuc.Models;
+using MongoDB.Driver;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 public class CommentRepository
 {
@@ -34,12 +37,12 @@ public class CommentRepository
         await _collection.DeleteOneAsync(x => x.Id == id);
     }
 
-    public async Task DeleteCommentAsync(string commentId, string userId)
+    public async Task DeleteUserCommentAsync(string commentId, string fromUserId, string toUserId)
     {
         var filter = Builders<Comment>.Filter.Eq(c => c.Id, commentId) &
-                     Builders<Comment>.Filter.ElemMatch(c => c.Comments, uc => uc.UserComment.UserId == userId);
+                     Builders<Comment>.Filter.ElemMatch(c => c.Comments, uc => uc.FromUserId == fromUserId && uc.ToUserId == toUserId);
 
-        var update = Builders<Comment>.Update.Set(x => x.Comments[-1].UserComment.UserId, (string)null);
+        var update = Builders<Comment>.Update.PullFilter(c => c.Comments, uc => uc.FromUserId == fromUserId && uc.ToUserId == toUserId);
 
         await _collection.UpdateOneAsync(filter, update);
     }

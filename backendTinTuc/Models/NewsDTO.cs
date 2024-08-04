@@ -2,7 +2,7 @@
 {
     public class NewsDTO
     {
-        public string Id { get; set; }
+        public string? Id { get; set; }
         public string Title { get; set; }
         public string LinkDetail { get; set; }
         public string ImageUrl { get; set; }
