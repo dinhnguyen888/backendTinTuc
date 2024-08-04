@@ -15,10 +15,10 @@ namespace backendTinTuc.Controllers
             _crawlingData = crawlingData;
         }
 
-        [HttpGet("start")]
-        public IActionResult StartCrawling()
+        [HttpPost("start")]
+        public IActionResult StartCrawling([FromBody] int totalPage)
         {
-            _crawlingData.StartCrawling();
+            _crawlingData.StartCrawling(totalPage);
 
             if (_crawlingData.IsCrawlingSuccessful)
             {
@@ -29,6 +29,7 @@ namespace backendTinTuc.Controllers
                 return StatusCode(500, "Crawling failed.");
             }
         }
+
 
         [HttpGet("latest")]
         public IActionResult GetLatestData()
@@ -63,5 +64,13 @@ namespace backendTinTuc.Controllers
             var categories = _crawlingData.GetSections();
             return Ok(categories);
         }
+
+        [HttpPost("stop")]
+        public IActionResult StopCrawling()
+        {
+            _crawlingData.StopCrawling();
+            return Ok("Crawling stopped successfully.");
+        }
+
     }
 }

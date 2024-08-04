@@ -5,27 +5,28 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using backendTinTuc.Models;
+using System.Threading;
 
 namespace backendTinTuc.Service
 {
     public class CrawlingData
     {
         private readonly IMongoDatabase _database;
-        private readonly CommentRepository _commentRepository; // Add CommentRepository
+        private readonly CommentRepository _commentRepository;
         private readonly string baseUrl = "https://vnexpress.net/";
-        private List<string> sectionList; // Global list for categories
+        private List<string> sectionList;
+        private CancellationTokenSource _cancellationTokenSource; // Token to cancel the crawling
 
         public bool IsCrawlingSuccessful { get; private set; }
 
         public CrawlingData(IMongoDatabase database, CommentRepository commentRepository)
         {
             _database = database;
-            _commentRepository = commentRepository; // Initialize CommentRepository
+            _commentRepository = commentRepository;
             sectionList = new List<string> { "chinh-tri", "dan-sinh", "lao-dong-viec-lam", "giao-thong" };
             IsCrawlingSuccessful = false;
         }
 
-        // Method to update the category list
         public void UpdateSectionList(List<string> section)
         {
             sectionList = section;
@@ -37,8 +38,11 @@ namespace backendTinTuc.Service
             return sectionList;
         }
 
-        public void StartCrawling()
+        public void StartCrawling(int totalCrawlingPage)
         {
+            _cancellationTokenSource = new CancellationTokenSource();
+            var token = _cancellationTokenSource.Token;
+
             try
             {
                 var listDataExport = new List<News>();
@@ -51,11 +55,15 @@ namespace backendTinTuc.Service
                     var document = LoadDocument(requestUrl);
                     Console.WriteLine("Page loaded successfully.");
 
-                    // Define the number of pages to crawl
-                    const int totalPage = 1;
-
-                    for (var i = 1; i <= totalPage; i++)
+                    for (var i = 1; i <= totalCrawlingPage; i++)
                     {
+                        if (token.IsCancellationRequested)
+                        {
+                            Console.WriteLine("Crawling has been stopped.");
+                            IsCrawlingSuccessful = false;
+                            return;
+                        }
+
                         var requestPerPage = baseUrl + $"thoi-su/{section}-p{i}";
                         Console.WriteLine($"Processing page {i}: {requestPerPage}");
                         var documentForListItem = LoadDocument(requestPerPage);
@@ -65,26 +73,30 @@ namespace backendTinTuc.Service
                         {
                             foreach (var node in listNodeProductItem)
                             {
+                                if (token.IsCancellationRequested)
+                                {
+                                    Console.WriteLine("Crawling has been stopped.");
+                                    IsCrawlingSuccessful = false;
+                                    return;
+                                }
+
                                 var newsItem = ParseNewsItem(node, section);
 
                                 if (newsItem != null)
                                 {
-                                    // Check if the news item already exists in the database
                                     var existingNews = newsCollection.Find(n => n.LinkDetail == newsItem.LinkDetail).FirstOrDefault();
                                     if (existingNews == null)
                                     {
                                         listDataExport.Add(newsItem);
-                                        // Insert news item into the database
                                         newsCollection.InsertOne(newsItem);
                                         Console.WriteLine("News item inserted into MongoDB.");
 
-                                        // Create and insert an empty Comment model with the same ID as the news item
                                         var comment = new Comment
                                         {
                                             Id = newsItem.Id,
                                             Comments = new List<UserCommentDetails>()
                                         };
-                                        _commentRepository.CreateAsync(comment).Wait(); // Ensure the task is completed synchronously
+                                        _commentRepository.CreateAsync(comment).Wait();
                                         Console.WriteLine("Comment model created for the news item.");
                                     }
                                     else
@@ -111,6 +123,11 @@ namespace backendTinTuc.Service
             }
         }
 
+        public void StopCrawling()
+        {
+            _cancellationTokenSource?.Cancel();
+        }
+
         public void GetLatestData()
         {
             try
@@ -128,8 +145,6 @@ namespace backendTinTuc.Service
                         if (latestNews != null)
                         {
                             var newsCollection = _database.GetCollection<News>("News");
-
-                            // Check if the news item already exists in the database
                             var existingNews = newsCollection.Find(n => n.LinkDetail == latestNews.LinkDetail).FirstOrDefault();
 
                             if (existingNews == null)
@@ -137,13 +152,12 @@ namespace backendTinTuc.Service
                                 newsCollection.InsertOne(latestNews);
                                 Console.WriteLine("Inserted latest data into MongoDB.");
 
-                                // Create and insert an empty Comment model with the same ID as the news item
                                 var comment = new Comment
                                 {
                                     Id = latestNews.Id,
                                     Comments = new List<UserCommentDetails>()
                                 };
-                                _commentRepository.CreateAsync(comment).Wait(); // Ensure the task is completed synchronously
+                                _commentRepository.CreateAsync(comment).Wait();
                                 Console.WriteLine("Comment model created for the latest news item.");
                             }
                             else
