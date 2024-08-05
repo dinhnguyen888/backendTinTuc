@@ -1,6 +1,8 @@
 ﻿using backendTinTuc.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
+using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,6 +40,7 @@ public class CommentsController : ControllerBase
                     return new
                     {
                         c.Content,
+                        c.CommentId,
                         FromUserId = c.FromUserId,
                         FromUserName = fromUser?.Name,
                         ToUserId = c.ToUserId,
@@ -73,6 +76,7 @@ public class CommentsController : ControllerBase
                 return new
                 {
                     c.Content,
+                    c.CommentId,
                     FromUserId = c.FromUserId,
                     FromUserName = fromUser?.Name,
                     ToUserId = c.ToUserId,
@@ -85,40 +89,40 @@ public class CommentsController : ControllerBase
         return Ok(commentWithNames);
     }
 
-    [HttpPost]
-    public async Task<ActionResult<Comment>> Create(Comment comment)
-    {
-        await _commentRepository.CreateAsync(comment);
-        return CreatedAtRoute("GetComment", new { id = comment.Id.ToString() }, comment);
-    }
+    //[HttpPost]
+    //public async Task<ActionResult<Comment>> Create(Comment comment)
+    //{
+    //    await _commentRepository.CreateAsync(comment);
+    //    return CreatedAtRoute("GetComment", new { id = comment.Id.ToString() }, comment);
+    //}
 
-    [HttpPut("{id:length(24)}")]
-    public async Task<IActionResult> Update(string id, Comment updatedComment)
-    {
-        var comment = await _commentRepository.GetByIdAsync(id);
-        if (comment == null)
-        {
-            return NotFound();
-        }
+    //[HttpPut("{id:length(24)}")]
+    //public async Task<IActionResult> Update(string id, Comment updatedComment)
+    //{
+    //    var comment = await _commentRepository.GetByIdAsync(id);
+    //    if (comment == null)
+    //    {
+    //        return NotFound();
+    //    }
 
-        updatedComment.Id = id;
-        await _commentRepository.UpdateAsync(id, updatedComment);
-        return NoContent();
-    }
+    //    updatedComment.Id = id;
+    //    await _commentRepository.UpdateAsync(id, updatedComment);
+    //    return NoContent();
+    //}
 
-    [Authorize(Roles = "Admin, User")]
-    [HttpDelete("{commentId:length(24)}/{fromUserId}/{toUserId}")]
-    public async Task<IActionResult> DeleteUserComment(string commentId, string fromUserId, string toUserId)
-    {
-        var comment = await _commentRepository.GetByIdAsync(commentId);
-        if (comment == null)
-        {
-            return NotFound();
-        }
+    //[Authorize(Roles = "Admin")]
+    //[HttpDelete("{commentId:length(24)}/{fromUserId}/{toUserId}")]
+    //public async Task<IActionResult> DeleteUserComment(string commentId, string fromUserId, string toUserId)
+    //{
+    //    var comment = await _commentRepository.GetByIdAsync(commentId);
+    //    if (comment == null)
+    //    {
+    //        return NotFound();
+    //    }
 
-        await _commentRepository.DeleteUserCommentAsync(commentId, fromUserId, toUserId);
-        return NoContent();
-    }
+    //    await _commentRepository.DeleteUserCommentAsync(commentId, fromUserId, toUserId);
+    //    return NoContent();
+    //}
 
     [HttpPost("add-comment")]
     public async Task<IActionResult> AddComment([FromBody] CommentDTO commentDto)
@@ -131,6 +135,7 @@ public class CommentsController : ControllerBase
 
         var userCommentDetails = new UserCommentDetails
         {
+            CommentId = ObjectId.GenerateNewId().ToString(),
             FromUserId = commentDto.FromUserId,
             ToUserId = commentDto.ToUserId,
             Content = commentDto.Content,
@@ -144,24 +149,19 @@ public class CommentsController : ControllerBase
     }
 
     [HttpPost("remove-comment")]
-    public async Task<IActionResult> RemoveComment([FromBody] CommentDTO commentDto)
+    public async Task<IActionResult> RemoveComment([FromBody] string commentId)
     {
-        var comment = await _commentRepository.GetByIdAsync(commentDto.NewsId);
-        if (comment == null)
+        var filter = Builders<Comment>.Filter.ElemMatch(c => c.Comments, uc => uc.CommentId == commentId);
+        var update = Builders<Comment>.Update.PullFilter(c => c.Comments, uc => uc.CommentId == commentId);
+
+        var result = await _commentRepository.UpdateOneAsync(filter, update);
+
+        if (result.ModifiedCount == 0)
         {
-            return NotFound();
+            return NotFound("Comment not found.");
         }
-
-        var originalCount = comment.Comments.Count;
-        comment.Comments.RemoveAll(c => c.FromUserId == commentDto.FromUserId && c.ToUserId == commentDto.ToUserId && c.Content == commentDto.Content);
-
-        if (comment.Comments.Count == originalCount)
-        {
-            return NotFound("Comment not found for the provided users.");
-        }
-
-        await _commentRepository.UpdateAsync(commentDto.NewsId, comment);
 
         return Ok();
     }
+
 }

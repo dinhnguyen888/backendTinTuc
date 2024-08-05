@@ -52,4 +52,9 @@ public class CommentRepository
         var filter = Builders<Comment>.Filter.Eq(c => c.Id, newsId);
         await _collection.DeleteManyAsync(filter);
     }
+    public async Task<UpdateResult> UpdateOneAsync(FilterDefinition<Comment> filter, UpdateDefinition<Comment> update)
+    {
+        return await _collection.UpdateOneAsync(filter, update);
+    }
+
 }

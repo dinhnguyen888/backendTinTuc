@@ -7,6 +7,10 @@ namespace backendTinTuc.Models
 {
     public class UserCommentDetails
     {
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string CommentId { get; set; }
+
         [BsonElement("FromUserId")]
         public string FromUserId { get; set; }
 
