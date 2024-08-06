@@ -23,7 +23,7 @@ namespace backendTinTuc.Service
         {
             _database = database;
             _commentRepository = commentRepository;
-            sectionList = new List<string> { "chinh-tri", "dan-sinh", "lao-dong-viec-lam", "giao-thong" };
+            sectionList = new List<string> { "chinh-tri", "dan-sinh", "lao-dong-viec-lam", "giao-thong", "mekong", "quy-hy-vong" };
             IsCrawlingSuccessful = false;
         }
 
