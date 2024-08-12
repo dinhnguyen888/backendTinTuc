@@ -20,9 +20,13 @@ namespace backendTinTuc.Models
         [BsonElement("ToUserId")]
         public string? ToUserId { get; set; }
 
+        [BsonElement("ToCommentId")]
+        public string? ToCommentId { get; set; }
+
         [BsonElement("CreateAt")]
         public DateTime CreateAt { get; set; }
     }
+
 
     public class Comment
     {

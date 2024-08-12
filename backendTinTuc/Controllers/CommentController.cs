@@ -127,8 +127,8 @@ public class CommentsController : ControllerBase
     [HttpPost("add-comment")]
     public async Task<IActionResult> AddComment([FromBody] CommentDTO commentDto)
     {
-        var comment = await _commentRepository.GetByIdAsync(commentDto.NewsId);
-        if (comment == null)
+        var commentInNews = await _commentRepository.GetByIdAsync(commentDto.NewsId);
+        if (commentInNews == null)
         {
             return NotFound();
         }
@@ -139,14 +139,27 @@ public class CommentsController : ControllerBase
             FromUserId = commentDto.FromUserId,
             ToUserId = commentDto.ToUserId,
             Content = commentDto.Content,
+            ToCommentId = commentDto.ToCommentId,
             CreateAt = DateTime.UtcNow
         };
 
-        comment.Comments.Add(userCommentDetails);
-        await _commentRepository.UpdateAsync(commentDto.NewsId, comment);
+        var index = commentInNews.Comments.FindIndex(c => c.CommentId == userCommentDetails.ToCommentId);
+        if (index != -1)
+        {
+            // Chèn comment mới ngay sau comment khớp với CommentId
+            commentInNews.Comments.Insert(index + 1, userCommentDetails);
+        }
+        else
+        {
+            // Thêm comment mới vào cuối danh sách nếu không tìm thấy khớp
+            commentInNews.Comments.Add(userCommentDetails);
+        }
+       
+        await _commentRepository.UpdateAsync(commentDto.NewsId, commentInNews);
 
         return Ok(userCommentDetails);
     }
+
 
     [HttpPost("remove-comment")]
     public async Task<IActionResult> RemoveComment([FromBody] string commentId)
