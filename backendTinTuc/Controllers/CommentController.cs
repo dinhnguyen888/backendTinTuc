@@ -164,6 +164,7 @@ public class CommentsController : ControllerBase
     [HttpPost("remove-comment")]
     public async Task<IActionResult> RemoveComment([FromBody] string commentId)
     {
+        // Bước 1: Xóa CommentId cụ thể
         var filter = Builders<Comment>.Filter.ElemMatch(c => c.Comments, uc => uc.CommentId == commentId);
         var update = Builders<Comment>.Update.PullFilter(c => c.Comments, uc => uc.CommentId == commentId);
 
@@ -173,6 +174,12 @@ public class CommentsController : ControllerBase
         {
             return NotFound("Comment not found.");
         }
+
+        // Bước 2: Xóa tất cả các bình luận có ToCommentId trùng với commentId đã bị xóa
+        var filterReplies = Builders<Comment>.Filter.ElemMatch(c => c.Comments, uc => uc.ToCommentId == commentId);
+        var updateReplies = Builders<Comment>.Update.PullFilter(c => c.Comments, uc => uc.ToCommentId == commentId);
+
+        var resultReplies = await _commentRepository.UpdateOneAsync(filterReplies, updateReplies);
 
         return Ok();
     }

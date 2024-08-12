@@ -2,6 +2,7 @@
 using MongoDB.Driver;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 public class CommentRepository
 {
@@ -32,7 +33,7 @@ public class CommentRepository
         await _collection.ReplaceOneAsync(x => x.Id == id, updatedModel);
     }
 
-    public async Task DeleteAsync(string id)
+ /*   public async Task DeleteAsync(string id)
     {
         await _collection.DeleteOneAsync(x => x.Id == id);
     }
@@ -45,7 +46,7 @@ public class CommentRepository
         var update = Builders<Comment>.Update.PullFilter(c => c.Comments, uc => uc.FromUserId == fromUserId && uc.ToUserId == toUserId);
 
         await _collection.UpdateOneAsync(filter, update);
-    }
+    }*/
 
     public async Task DeleteCommentsByNewsIdAsync(string newsId)
     {
@@ -56,5 +57,7 @@ public class CommentRepository
     {
         return await _collection.UpdateOneAsync(filter, update);
     }
+
+  
 
 }
