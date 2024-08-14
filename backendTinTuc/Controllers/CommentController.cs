@@ -182,6 +182,21 @@ public class CommentsController : ControllerBase
         var resultReplies = await _commentRepository.UpdateOneAsync(filterReplies, updateReplies);
 
         return Ok();
-    }
 
+    }
+       [HttpPost("delete-comment")]
+    public async Task<IActionResult> DeleteComment([FromBody] string id)
+    {
+        var filter = Builders<Comment>.Filter.ElemMatch(c => c.Comments, uc => uc.CommentId == id);
+        var update = Builders<Comment>.Update.Set("Comments.$.Content", "tin nhắn đã bị xóa");
+
+        var result = await _commentRepository.UpdateOneAsync(filter, update);
+
+        if (result.ModifiedCount == 0)
+        {
+            return NotFound("Comment not found.");
+        }
+
+        return Ok();
+    }
 }

@@ -34,7 +34,10 @@ public class JwtMiddleware
             await AttachAccountToContext(context, token);
         }
 
-        await _next(context);
+        if (!context.Response.HasStarted) // Kiểm tra nếu phản hồi chưa được bắt đầu
+        {
+            await _next(context);
+        }
     }
 
     private async Task AttachAccountToContext(HttpContext context, string token)
@@ -56,30 +59,57 @@ public class JwtMiddleware
             }, out SecurityToken validatedToken);
 
             var jwtToken = (JwtSecurityToken)validatedToken;
-            var accountId = jwtToken.Claims.First(x => x.Type == ClaimTypes.Name).Value;
+            var accountId = jwtToken.Claims.First(x => x.Type == "unique_name").Value;
+
 
             var collection = _context.GetCollection<Account>("Account");
             var account = await collection.Find(x => x.Id == accountId).FirstOrDefaultAsync();
+
+           
+
+            if (account == null)
+            {
+                if (!context.Response.HasStarted)
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    await context.Response.WriteAsync("AccountNotFound");
+                }
+                return;
+            }
 
             context.Items["Account"] = account;
         }
         catch (SecurityTokenExpiredException ex)
         {
             _logger.LogError($"Token expired: {ex.Message}");
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            await context.Response.WriteAsync("TokenExpired"); // Phân biệt lỗi token hết hạn
+            if (!context.Response.HasStarted)
+            {
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                await context.Response.WriteAsync("TokenExpired");
+            }
+            return;
         }
         catch (SecurityTokenException ex)
         {
             _logger.LogError($"Security token validation failed: {ex.Message}");
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            await context.Response.WriteAsync("InvalidToken"); // Phân biệt lỗi token không hợp lệ
+            if (!context.Response.HasStarted)
+            {
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                await context.Response.WriteAsync("InvalidToken");
+            }
+            return;
         }
         catch (Exception ex)
         {
             _logger.LogError($"Error attaching account to context: {ex.Message}");
-            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-            await context.Response.WriteAsync("An error occurred.");
+            if (!context.Response.HasStarted)
+            {
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                await context.Response.WriteAsync("An error occurred.");
+            }
+            return;
         }
     }
+
+
 }

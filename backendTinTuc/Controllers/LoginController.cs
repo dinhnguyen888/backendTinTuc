@@ -56,7 +56,7 @@ namespace backendTinTuc.Controllers
         {
             Subject = new ClaimsIdentity(new Claim[]
             {
-                new Claim(ClaimTypes.Name, account.Id.ToString()),
+                new Claim("unique_name", account.Id.ToString()),
                 new Claim(ClaimTypes.Email, account.Email),
                 new Claim(ClaimTypes.Role, account.Roles.ToString())
             }),
